@@ -1,27 +1,21 @@
-﻿using TMPro;
+﻿using System;
+using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class UIScoreManager : MonoBehaviour
 {
     private TextMeshProUGUI text => GetComponent<TextMeshProUGUI>();
 
     public static UIScoreManager Instance;
-    private int currentScore;
 
     private void Awake()
     {
         Instance = this;
-        currentScore = 0;
     }
 
-    public void AddScore(int score)
+    private void Start()
     {
-        currentScore += score;
-        UpdateScore();
-    }
-
-    private void UpdateScore()
-    {
-        text.text = $"Score: {currentScore}";
+        ScoreManager.Instance.updateScoreEvent.AddListener((int currentScore) => { text.text = $"Score: {currentScore}"; });
     }
 }

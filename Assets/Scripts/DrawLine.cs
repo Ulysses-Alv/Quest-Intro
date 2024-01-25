@@ -1,8 +1,10 @@
 ﻿using UnityEngine;
 
+
+[RequireComponent (typeof(LineRenderer))]
 public class DrawLine : MonoBehaviour
 {
-    [SerializeField] private LineRenderer lineRenderer;
+    private LineRenderer lineRenderer => GetComponent<LineRenderer>();
     [SerializeField] private int linePoints;
     [SerializeField] private float timeBtwPoints;
 

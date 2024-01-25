@@ -9,15 +9,46 @@ public class Target : MonoBehaviour
 
     private void Start()
     {
-        ResetGameObject();
+        GetComponent<MeshRenderer>().enabled = false;
+        GameManagerStatus.statusEvent.AddListener(ChangeTargetStatus);
+    }
+    private void ChangeTargetStatus(GameState status)
+    {
+        if (status == GameState.Playing)
+            InitializeTarget();
+        else
+            StopTarget();
+
+    }
+    private void StopTarget()
+    {
+        GetComponent<MeshRenderer>().enabled = false;
+    }
+    private void InitializeTarget()
+    {
+        GetComponent<MeshRenderer>().enabled = true;
+        ResetTarget();
     }
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision != null)
-        {
-            ResetGameObject();
+        if (!GameManagerStatus.IsPlaying()) return;
 
-            UIScoreManager.Instance.AddScore(CalculateScore());
+        if (!collision.gameObject.CompareTag("Bullet")) return;
+
+        TargetAudioManager.instance.TargetHitted();
+        ResetTarget();
+        ScoreManager.Instance.AddScore(CalculateScore());
+    }
+    private void Update()
+    {
+        if (!GameManagerStatus.IsPlaying()) return;
+
+        gameObject.transform.position = Vector3.MoveTowards(gameObject.transform.position, targetPosition, speed * Time.deltaTime);
+
+        if (Vector3.Distance(gameObject.transform.position, targetPosition) < 0.1f)
+        {
+            ResetTarget();
+            TargetAudioManager.instance.TargetMissed();
         }
     }
 
@@ -27,7 +58,7 @@ public class Target : MonoBehaviour
         return Mathf.CeilToInt(speed * scoreSize);
     }
 
-    private void ResetGameObject()
+    private void ResetTarget()
     {
         targetPosition = targetPositions[Random.Range(0, targetPositions.Length)].position;
         gameObject.transform.position = NewPosition();
@@ -35,27 +66,20 @@ public class Target : MonoBehaviour
         SetNewSize();
     }
 
+    #region SetNew
     private void SetNewSize()
     {
-        size = Random.Range(0.1f, 1f);
+        size = Random.Range(0.01f, 0.03f);
         gameObject.transform.localScale = Vector3.one * size;
     }
 
-    private void Update()
-    {
-        gameObject.transform.position = Vector3.MoveTowards(gameObject.transform.position, targetPosition, speed * Time.deltaTime);
-        
-        if (Vector3.Distance(gameObject.transform.position, targetPosition) < 0.1f)
-        {
-            ResetGameObject();
-        }
-    }
     private void SetNewSpeed()
     {
-        speed = Random.Range(1f, 10f);
+        speed = Random.Range(1f, 7f);
     }
     private Vector3 NewPosition()
     {
         return new Vector3(Random.Range(-5f, 5f), Random.Range(0f, 5f), 5);
     }
+    #endregion
 }
