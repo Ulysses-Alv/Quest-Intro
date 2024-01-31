@@ -1,11 +1,50 @@
+using System;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class Target : MonoBehaviour
 {
-    [SerializeField] private Transform[] targetPositions;
     private Vector3 targetPosition;
-    private float speed;
+    private float _speed;
     private float size;
+
+    [System.Serializable]
+    public class XPosition
+    {
+        public bool isLeft;
+        public float xSpawn;
+    }
+
+    [System.Serializable]
+    public class YPosition
+    {
+        public float minY;
+        public float maxY;
+    }
+    [System.Serializable]
+    public class ZPosition
+    {
+        public float minZ;
+        public float maxZ;
+    }
+
+    [System.Serializable]
+    public class Speed
+    {
+        public float minSpeed;
+        public float maxSpeed;
+    }
+
+
+    [SerializeField] private XPosition xPositionLeft;
+    [SerializeField] private XPosition xPositionRight;
+
+    [SerializeField] private YPosition yPosition;
+    [SerializeField] private ZPosition zPosition;
+
+    [SerializeField] private Speed speed;
+
+    private XPosition currentXPosition;
 
     private void Start()
     {
@@ -43,11 +82,13 @@ public class Target : MonoBehaviour
     {
         if (!GameManagerStatus.IsPlaying()) return;
 
-        gameObject.transform.position = Vector3.MoveTowards(gameObject.transform.position, targetPosition, speed * Time.deltaTime);
+        gameObject.transform.position = Vector3.MoveTowards(gameObject.transform.position, targetPosition, _speed * Time.deltaTime);
 
         if (Vector3.Distance(gameObject.transform.position, targetPosition) < 0.1f)
         {
             ResetTarget();
+            ScoreManager.Instance.AddScore(-(CalculateScore() / 2));
+
             TargetAudioManager.instance.TargetMissed();
         }
     }
@@ -55,31 +96,53 @@ public class Target : MonoBehaviour
     private int CalculateScore()
     {
         float scoreSize = Mathf.Pow(size, -1) * 2;
-        return Mathf.CeilToInt(speed * scoreSize);
+        return Mathf.CeilToInt(_speed * scoreSize);
     }
 
     private void ResetTarget()
     {
-        targetPosition = targetPositions[Random.Range(0, targetPositions.Length)].position;
-        gameObject.transform.position = NewPosition();
+        Vector3 newPos = NewPosition();
+        SetObjectivePosition(newPos);
+
+        gameObject.transform.position = newPos;
         SetNewSpeed();
         SetNewSize();
+    }
+
+    private void SetObjectivePosition(Vector3 newPos)
+    {
+        float distance = Mathf.Abs(xPositionLeft.xSpawn - xPositionRight.xSpawn);
+
+        float x = currentXPosition.isLeft ? distance : -distance;
+
+        targetPosition = new Vector3(newPos.x + x, newPos.y, newPos.z);
     }
 
     #region SetNew
     private void SetNewSize()
     {
-        size = Random.Range(0.01f, 0.03f);
+        size = Random.Range(0.01f, 0.021f);
         gameObject.transform.localScale = Vector3.one * size;
     }
 
     private void SetNewSpeed()
     {
-        speed = Random.Range(1f, 7f);
+        _speed = Random.Range(speed.minSpeed, speed.maxSpeed);
     }
+
     private Vector3 NewPosition()
     {
-        return new Vector3(Random.Range(-5f, 5f), Random.Range(0f, 5f), 5);
+        SetCurrentXPosition();
+        float x = currentXPosition.xSpawn;
+        float y = Random.Range(yPosition.minY, yPosition.maxY);
+        float z = Random.Range(zPosition.minZ, zPosition.maxZ);
+
+        return new Vector3(x, y, z);
+    }
+
+    private void SetCurrentXPosition()
+    {
+        currentXPosition = Random.value > 0.5f ? xPositionLeft : xPositionRight;
     }
     #endregion
 }

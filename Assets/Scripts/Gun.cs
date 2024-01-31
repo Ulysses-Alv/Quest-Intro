@@ -19,10 +19,7 @@ public class Gun : MonoBehaviour
     
     public CanShootEvent ShootGunEvent;
 
-    private void Start()
-    {
-        bulletsRemaining = 20;
-    }
+    
     public void TryShoot()
     {
         if (bulletsRemaining <= 0)

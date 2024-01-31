@@ -33,7 +33,7 @@ public class ScoreManager : MonoBehaviour
     public void AddScore(int score)
     {
         currentScore += score;
-
+        currentScore = Mathf.Max(0, currentScore);
         updateScoreEvent.Invoke(currentScore);
     }
 
